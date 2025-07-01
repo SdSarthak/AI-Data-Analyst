@@ -1,0 +1,7 @@
+streamlit
+pandas
+requests
+sqlite3
+streamlit
+pandas
+requests
