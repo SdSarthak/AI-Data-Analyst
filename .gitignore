@@ -1,16 +1,60 @@
-﻿.env
+# --- Secrets and credentials ---
+.env
 *.env
 .env.local
 .env.*.local
+!.env.example
 apikeys.txt
 *.key
 *.pem
 secrets.json
+credentials.json
+serviceAccount*.json
 config.json
+
+# --- Data (never commit real datasets) ---
+*.csv
+*.tsv
+*.parquet
+*.xlsx
+*.xls
+*.db
+*.sqlite
+*.sqlite3
+data/
+!tests/fixtures/*.csv
+
+# --- Python ---
 __pycache__/
-*.pyc
-node_modules/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environments ---
 venv/
 env/
+.venv/
+ENV/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Editors / OS ---
 .vscode/
 .idea/
+.DS_Store
+Thumbs.db
+
+# --- Node ---
+node_modules/
+
+# --- Logs ---
+*.log
+logs/
