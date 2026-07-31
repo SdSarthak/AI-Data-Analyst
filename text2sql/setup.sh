@@ -9,14 +9,20 @@ echo "============================================"
 echo ""
 
 # Check if Python is installed
-if ! command -v python3.10 &> /dev/null; then
-    echo "ERROR: Python 3.10+ is not installed"
-    echo "Please install Python 3.10+ from https://www.python.org"
+PYTHON="${PYTHON:-python3}"
+if ! command -v "$PYTHON" &> /dev/null; then
+    echo "ERROR: python3 was not found on PATH"
+    echo "Install Python 3.10+ from https://www.python.org, or set PYTHON=/path/to/python"
+    exit 1
+fi
+
+if ! "$PYTHON" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)'; then
+    echo "ERROR: Python 3.10+ is required ($("$PYTHON" --version) found)"
     exit 1
 fi
 
 echo "[1/5] Creating virtual environment..."
-python3.10 -m venv venv
+"$PYTHON" -m venv venv
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to create virtual environment"
     exit 1

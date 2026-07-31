@@ -18,7 +18,7 @@ git clone <your-repo-url>
 cd text-to-sql-llm
 
 # Create virtual environment
-python3.10 -m venv venv
+python3 -m venv venv
 
 # Activate virtual environment
 # On Windows:
@@ -132,7 +132,7 @@ sudo certbot --nginx -d your-domain.com
 ### Run Tests
 
 ```bash
-pytest tests/ -v
+cd .. && pytest -k text2sql
 ```
 
 ### Run Linting
@@ -183,7 +183,7 @@ kill -9 <PID>
 ```bash
 # Recreate virtual environment
 rm -rf venv
-python3.10 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```

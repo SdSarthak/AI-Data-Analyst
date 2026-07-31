@@ -10,7 +10,7 @@ sudo apt-get update
 sudo apt-get upgrade -y
 
 # Install Python and dependencies
-sudo apt-get install -y python3.10 python3.10-venv python3-pip git
+sudo apt-get install -y python3 python3-venv python3-pip git
 
 # Create application directory
 APP_DIR="/home/ubuntu/text-to-sql-llm"
@@ -21,7 +21,7 @@ cd $APP_DIR
 # sudo git clone https://your-repo-url.git .
 
 # Create virtual environment
-python3.10 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 
 # Install Python dependencies
