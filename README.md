@@ -133,7 +133,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-229 tests, all deterministic. Model calls are stubbed, fixtures are synthetic,
+227 tests, all deterministic. Model calls are stubbed, fixtures are synthetic,
 and nothing touches the network or a real database.
 
 ```bash

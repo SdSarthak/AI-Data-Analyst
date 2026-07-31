@@ -5,8 +5,6 @@ Giving the model real ``CREATE TABLE`` DDL (with quoted identifiers) plus a
 few example rows produces far fewer invalid column references than a bare
 comma separated list of names.
 """
-from typing import Iterable
-
 import pandas as pd
 
 DEFAULT_TABLE = "data"
@@ -82,9 +80,3 @@ def _cell(value: object, max_len: int = 40) -> str:
     if len(text) > max_len:
         text = text[: max_len - 3] + "..."
     return text
-
-
-def unknown_columns(df: pd.DataFrame, names: Iterable[str]) -> list:
-    """Return the names that are not columns of ``df`` (case insensitive)."""
-    known = {str(c).lower() for c in df.columns}
-    return [name for name in names if str(name).lower() not in known]

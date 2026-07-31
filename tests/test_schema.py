@@ -7,7 +7,6 @@ from analyst.schema import (
     quote_identifier,
     sample_rows_markdown,
     sqlite_type,
-    unknown_columns,
 )
 
 
@@ -96,11 +95,3 @@ class TestSampleRowsMarkdown:
     def test_nulls_render_as_null(self):
         df = pd.DataFrame({"note": [None]})
         assert "NULL" in sample_rows_markdown(df, limit=1)
-
-
-class TestUnknownColumns:
-    def test_reports_missing_names(self, sales_df):
-        assert unknown_columns(sales_df, ["region", "nope"]) == ["nope"]
-
-    def test_is_case_insensitive(self, sales_df):
-        assert unknown_columns(sales_df, ["REGION"]) == []
