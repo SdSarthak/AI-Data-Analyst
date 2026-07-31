@@ -1,7 +1,6 @@
-streamlit
-pandas
-requests
-sqlite3
-streamlit
-pandas
-requests
+# Core app (main.py + the analyst package).
+# sqlite3 is part of the standard library and must not be listed here.
+streamlit>=1.30
+pandas>=2.0
+huggingface_hub>=0.24
+python-dotenv>=1.0
