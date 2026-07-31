@@ -1,6 +1,6 @@
-"""
-Streamlit configuration file
-"""
+# Streamlit configuration.
+# This file must be valid TOML. A Python docstring used to sit at the top,
+# which made Streamlit fail to parse it.
 
 [theme]
 primaryColor = "#3498db"
@@ -11,7 +11,6 @@ font = "sans serif"
 
 [client]
 showErrorDetails = true
-showSidebarNavigation = true
 
 [logger]
 level = "info"
@@ -21,5 +20,4 @@ port = 8501
 headless = false
 runOnSave = true
 maxUploadSize = 10
-enableCORS = true
 enableXsrfProtection = true

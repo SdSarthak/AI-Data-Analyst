@@ -1,374 +1,156 @@
-# Text-to-SQL LLM Application
+# Text-to-SQL LLM
 
-A Streamlit-based web application that leverages Large Language Models to convert natural language queries into optimized SQL commands, enabling secure database interaction with Databricks, user authentication, and seamless deployment on AWS EC2.
+A Streamlit application that turns plain English questions into SQL, runs them
+against a Databricks SQL warehouse, and shows the results. It adds user
+accounts, per-session query history and saved queries on top of the pipeline.
 
-## Project Overview
-
-This application democratizes data access by allowing non-technical users to query databases using natural language. It uses GPT-4 to generate accurate SQL queries and validates them before execution.
-
-### Key Features
-
-- **Natural Language to SQL**: Convert plain English queries to SQL using GPT-4
-- **User Authentication**: Secure login and signup with password hashing
-- **Query Management**: History tracking, favorites, and quick analysis templates
-- **SQL Validation**: Automatic SQL validation, optimization, and explanation
-- **Databricks Integration**: Seamless connection to Databricks warehouses
-- **Responsive UI**: Intuitive Streamlit interface with real-time query execution
-- **AWS Deployment**: Ready-to-deploy Docker and EC2 configurations
-- **Error Handling**: Comprehensive error handling and logging
-
-## Architecture
-
-### Components
-
-1. **Frontend**: Streamlit web application
-2. **LLM Engine**: OpenAI GPT-4 integration for SQL generation
-3. **Database Connector**: Databricks SQL connector
-4. **SQL Validator**: Query validation and optimization
-5. **Authentication**: User management and session handling
-6. **Query Engine**: Orchestration of the complete pipeline
-
-### Data Flow
-
-1. User enters natural language query
-2. System retrieves database schema
-3. LLM generates SQL query
-4. Validator checks query safety and syntax
-5. Query is optimized
-6. Query executes on Databricks
-7. Results displayed to user
+This is a subproject of [AI Data Analysis](../README.md). If you just want to
+query a CSV, use the root application instead — it needs one API token and no
+warehouse.
 
 ## Prerequisites
 
-- Python 3.10+
-- OpenAI API key (GPT-4 access)
-- Databricks account with:
-  - Host URL
-  - HTTP path
-  - Personal access token
-- Git (for deployment)
+- Python 3.10 or newer
+- An OpenAI API key
+- A Databricks SQL warehouse, and from it:
+  - the workspace host name
+  - the warehouse HTTP path
+  - a personal access token
+  - the catalog and schema you want to query
 
-## Installation
-
-### 1. Clone Repository
+## Setup
 
 ```bash
-git clone https://your-repo-url.git
-cd text-to-sql-llm
-```
+cd text2sql
 
-### 2. Create Virtual Environment
+python -m venv venv
+source venv/bin/activate         # Windows: venv\Scripts\activate
 
-```bash
-python3.10 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-
-```bash
 pip install -r requirements.txt
+cp .env.example .env             # then edit .env
 ```
 
-### 4. Configure Environment Variables
+`setup.sh` (macOS/Linux) and `setup.bat` (Windows) do the same three steps.
+
+### Configuration
+
+All settings come from the environment or a local `.env`. Nothing is hardcoded.
+
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `OPENAI_API_KEY` | yes | – | OpenAI credentials |
+| `OPENAI_MODEL` | no | `gpt-4o` | Chat model used for generation |
+| `OPENAI_TEMPERATURE` | no | `0.0` | Deterministic by default |
+| `OPENAI_MAX_TOKENS` | no | `2000` | Response cap |
+| `DATABRICKS_HOST` | yes | – | Workspace host; a full URL is trimmed |
+| `DATABRICKS_HTTP_PATH` | yes | – | e.g. `/sql/1.0/warehouses/abc123` |
+| `DATABRICKS_TOKEN` | yes | – | Personal access token |
+| `DATABRICKS_CATALOG` | yes | – | Catalog to query |
+| `DATABRICKS_SCHEMA` | yes | – | Schema to query |
+| `USER_STORE_PATH` | no | `.data/users.json` | Where accounts are persisted |
+| `SESSION_TIMEOUT_MINUTES` | no | `30` | Idle timeout |
+| `MAX_QUERY_LENGTH` | no | `1000` | Longest accepted question |
+| `MAX_ROWS_DISPLAY` | no | `100` | Rows fetched per query |
+| `ENABLE_QUERY_OPTIMIZATION` | no | `True` | Reformat SQL before running |
+
+Missing required settings are reported on the login screen rather than
+crashing the app.
+
+## Run
 
 ```bash
-cp .env.example .env
-# Edit .env with your credentials:
-# - OPENAI_API_KEY
-# - DATABRICKS_HOST
-# - DATABRICKS_HTTP_PATH
-# - DATABRICKS_TOKEN
-# - DATABRICKS_CATALOG
-# - DATABRICKS_SCHEMA
-```
-
-### 5. Run Application Locally
-
-```bash
+cd text2sql
 streamlit run app.py
 ```
 
-The application will be available at `http://localhost:8501`
+Open <http://localhost:8501>, create an account, and start asking questions.
+Run it from inside `text2sql/` so the `src`, `config` and `utils` packages
+resolve.
 
-## Configuration
-
-### Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-# OpenAI Configuration
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4
-
-# Databricks Configuration
-DATABRICKS_HOST=https://xyz.cloud.databricks.com
-DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/abc123
-DATABRICKS_TOKEN=dapi...
-DATABRICKS_CATALOG=main
-DATABRICKS_SCHEMA=food_delivery
-
-# Application Configuration
-APP_SECRET_KEY=your-secret-key
-DEBUG=False
-LOG_LEVEL=INFO
-
-# AWS Configuration (for deployment)
-AWS_ACCESS_KEY_ID=AKIA...
-AWS_SECRET_ACCESS_KEY=...
-AWS_REGION=us-east-1
-```
-
-## Usage
-
-### Quick Start
-
-1. **Login/Sign Up**: Create an account or log in
-2. **Enter Query**: Type a natural language query
-3. **Generate SQL**: Click "Generate SQL & Execute"
-4. **View Results**: See results in a formatted table
-5. **Save Favorites**: Add queries to favorites for quick access
-
-### Query Examples
-
-- "Show me the top 10 restaurants by number of orders"
-- "What's the average rating for each cuisine type?"
-- "Calculate revenue by restaurant for the last 3 months"
-- "Find customers who ordered more than 5 times"
-- "List all orders from restaurants with 4+ star ratings"
-
-## Deployment
-
-### Local Docker Deployment
+### Docker
 
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Application will be available at http://localhost
+cd text2sql
+docker compose up --build
 ```
 
-### AWS EC2 Deployment
+Accounts live in the `user-store` named volume so they survive a rebuild. The
+nginx reverse proxy is behind a profile and is off by default; start it with
+`docker compose --profile proxy up` once `nginx.conf` and `./certs` are in
+place. See [SETUP.md](SETUP.md) for EC2 deployment.
 
-1. **Launch EC2 Instance**:
-   - Ubuntu 22.04 LTS
-   - t3.medium or larger (recommended: t3.large for production)
-   - Security group: Allow ports 80, 443, 22
+## How it works
 
-2. **Run Deployment Script**:
-   ```bash
-   chmod +x deployment/deploy_aws.sh
-   ./deployment/deploy_aws.sh
-   ```
+```
+question
+  -> schema + column-level table definitions read from Databricks
+  -> prompt -> GPT-4o -> raw response
+  -> fences, reasoning blocks and prose stripped
+  -> validated: single statement, read-only, balanced
+  -> reformatted onto clause-per-line
+  -> executed with a row cap
+  -> results, optional plain-English explanation
+```
 
-3. **Configure DNS** (Optional):
-   - Point your domain to the EC2 instance IP
-   - Run: `sudo certbot --nginx -d your-domain.com`
+Schema and table definitions are fetched once per session and cached; call
+`QueryEngine.refresh_schema()` after a DDL change.
 
-4. **Verify Deployment**:
-   - Check service status: `sudo systemctl status text-to-sql`
-   - View logs: `sudo journalctl -u text-to-sql -f`
+### Safety
 
-### HTTPS Configuration
+- **Read-only.** A query must be a single statement starting with `SELECT` or
+  a CTE. Write keywords (`DROP`, `DELETE`, `UPDATE`, `MERGE`, `GRANT`, …) are
+  refused.
+- **Literal-aware checks.** Keyword matching runs against a copy of the query
+  with string literals and comments blanked out, so a value like
+  `'update me'` does not trip the filter, and a write hidden in a comment
+  cannot smuggle itself past it.
+- **No stacked statements.** `SELECT 1; DROP TABLE x` is rejected.
+- **Identifiers are validated.** Catalog, schema and table names are
+  interpolated into SQL, so they must match `[A-Za-z_][A-Za-z0-9_]*`.
+- **Favourites are re-validated** before they run. Stored text is not trusted
+  because it was valid when it was saved.
+- **Passwords** are bcrypt hashed with a per-user salt at cost 12. Login
+  returns the same message for an unknown user and a wrong password.
 
-For production, enable HTTPS:
+## Layout
+
+```
+app.py                    Streamlit UI
+config/settings.py        environment-driven settings
+src/
+  llm_engine.py           prompt building, model call, response cleaning
+  database_connector.py   Databricks connection, schema reads, execution
+  sql_validator.py        safety checks, formatting, query introspection
+  query_engine.py         orchestrates the pipeline
+  auth.py                 accounts (persisted) and sessions (in memory)
+utils/
+  logger.py, errors.py
+data/schema_examples.sql  example warehouse schema this app was built against
+Dockerfile, docker-compose.yml, nginx.conf, deployment/
+```
+
+`src/llm_engine.py` and `src/database_connector.py` import LangChain and the
+Databricks driver lazily, so the modules stay importable — and testable — on a
+machine that has neither installed. Both `TextToSQLLLM` and `DatabaseConnector`
+accept an injected client, which is how the test suite exercises them.
+
+## Tests
+
+The suite lives at the repository root and covers this subproject:
 
 ```bash
-sudo certbot --nginx -d your-domain.com
+cd ..
+pip install -r requirements-dev.txt
+pytest -k text2sql
 ```
 
-## Project Structure
+No network, no warehouse and no OpenAI key required.
 
-```
-text-to-sql-llm/
-├── app.py                          # Main Streamlit application
-├── requirements.txt                # Python dependencies
-├── .env.example                    # Environment variables template
-├── Dockerfile                      # Docker configuration
-├── docker-compose.yml             # Docker Compose configuration
-├── nginx.conf                     # Nginx reverse proxy config
-│
-├── config/
-│   └── settings.py               # Application settings
-│
-├── src/
-│   ├── llm_engine.py            # LLM integration (OpenAI GPT-4)
-│   ├── database_connector.py     # Databricks connection
-│   ├── sql_validator.py          # SQL validation and optimization
-│   ├── query_engine.py           # Main query processing engine
-│   └── auth.py                   # User authentication & sessions
-│
-├── utils/
-│   ├── logger.py                # Logging configuration
-│   └── errors.py                # Custom exceptions
-│
-├── data/
-│   └── schema_examples.sql       # Sample database schema
-│
-└── deployment/
-    └── deploy_aws.sh            # AWS EC2 deployment script
-```
+## Known limits
 
-## Features in Detail
-
-### 1. Natural Language Query Generation
-
-- Converts natural language to SQL using GPT-4
-- Supports complex queries: CTEs, JOINs, aggregations
-- Context-aware query generation using database schema
-
-### 2. Query Validation & Optimization
-
-- SQL syntax validation
-- Safety checks (prevents dangerous keywords)
-- Query optimization (formatting, index hints)
-- Injection prevention
-
-### 3. User Authentication
-
-- Secure password hashing with bcrypt
-- Session management with timeout
-- User-specific query history and favorites
-
-### 4. Query History & Favorites
-
-- Automatic history tracking
-- Save favorite queries for quick access
-- Timestamp tracking for all queries
-
-### 5. Quick Analysis Templates
-
-- Pre-built analysis templates
-- Common business questions
-- One-click execution
-
-## API Reference
-
-### QueryEngine
-
-```python
-from src.query_engine import QueryEngine
-
-engine = QueryEngine()
-result = engine.process_query("Your natural language query")
-
-# result contains:
-# - success: bool
-# - sql: str (generated SQL)
-# - results: dict (execution results)
-# - error: str (if failed)
-```
-
-### DatabaseConnector
-
-```python
-from src.database_connector import DatabaseConnector
-
-db = DatabaseConnector()
-results = db.execute_query("SELECT * FROM table")
-schema = db.get_schema_info()
-```
-
-## Error Handling
-
-The application includes comprehensive error handling:
-
-- **LLMError**: LLM-related errors (API issues, timeouts)
-- **DatabaseError**: Database connection or query errors
-- **SQLValidationError**: SQL syntax or safety issues
-- **AuthenticationError**: User authentication failures
-- **QueryExecutionError**: General query processing errors
-
-## Logging
-
-Logs are configured in `config/settings.py`. By default, logs are output to console with configurable levels:
-
-```python
-LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
-```
-
-## Performance Considerations
-
-1. **Query Timeouts**: Default 30 seconds per query
-2. **Result Limits**: Maximum 100 rows displayed by default
-3. **Session Timeout**: 30 minutes of inactivity
-4. **Database Optimization**: Recommended indexes on commonly queried columns
-
-## Security Considerations
-
-- ✅ Secure password hashing with bcrypt
-- ✅ SQL injection prevention
-- ✅ Dangerous SQL keyword filtering
-- ✅ Session-based authentication
-- ✅ HTTPS support (production)
-- ✅ Environment variable secrets management
-
-## Troubleshooting
-
-### Connection Issues
-
-```bash
-# Test Databricks connection
-python -c "from src.database_connector import DatabaseConnector; DatabaseConnector()"
-```
-
-### API Key Issues
-
-- Verify OPENAI_API_KEY is set correctly
-- Check OpenAI account has GPT-4 access
-- Verify API key has sufficient quota
-
-### Database Issues
-
-- Test Databricks credentials
-- Verify network access to Databricks host
-- Check HTTP path is correct
-
-## Future Enhancements
-
-- [ ] Multi-database support (Snowflake, BigQuery, etc.)
-- [ ] Query performance metrics and suggestions
-- [ ] Advanced filtering and visualization options
-- [ ] Query templates and saved dashboards
-- [ ] Team collaboration features
-- [ ] Usage analytics and audit logs
-- [ ] Advanced caching for frequently used queries
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see LICENSE file for details.
-
-## Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check existing documentation
-- Review error logs for detailed information
-
-## Citation
-
-If you use this project in your research or work, please cite:
-
-```bibtex
-@software{text_to_sql_llm,
-  title={Text-to-SQL LLM Application},
-  author={Your Name},
-  year={2024},
-  url={https://github.com/your-repo}
-}
-```
-
-## Acknowledgments
-
-- OpenAI for GPT-4
-- Databricks for SQL warehouse infrastructure
-- Streamlit for the web framework
-- LangChain for LLM integration tools
+- Accounts are stored in a local JSON file. That is fine for a single instance;
+  a multi-instance deployment needs a real user database.
+- Sessions live in the process, so a restart logs everyone out.
+- The model sees every table definition in the schema. On a very wide schema
+  this will need narrowing to the relevant tables.
+- `SELECT`-only. Writing to the warehouse is out of scope.
