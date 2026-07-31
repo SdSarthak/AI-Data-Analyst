@@ -41,6 +41,10 @@ env/
 .env.local
 .env.*.local
 
+# Local user store written by src/auth.py (contains password hashes)
+.data/
+users.json
+
 # Logs
 logs/
 *.log

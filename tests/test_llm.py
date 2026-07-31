@@ -52,6 +52,7 @@ class TestCleanGeneratedSql:
             "",
             "   ",
             "I cannot answer that question.",
+            "I am not able to help with that.",
             "<think>still reasoning and then the response was cut off",
         ],
     )

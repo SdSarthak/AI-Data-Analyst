@@ -46,7 +46,13 @@ _TABLE_PLACEHOLDERS = (
 _THINK_BLOCK = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 _UNCLOSED_THINK = re.compile(r"^.*?</think>", re.DOTALL | re.IGNORECASE)
 _CODE_FENCE = re.compile(r"```[a-zA-Z]*\n?|```", re.MULTILINE)
-_QUERY_START = re.compile(r"\b(SELECT|WITH)\b", re.IGNORECASE)
+# A bare \bWITH\b also matches the English word, so a refusal such as
+# "I cannot help with that" was being treated as a CTE. Require the shape of a
+# real common table expression instead.
+_QUERY_START = re.compile(
+    r"\bSELECT\b|\bWITH\b\s+(?:RECURSIVE\s+)?[\w\"`\[\]]+\s*(?:\([^)]*\))?\s+AS\s*\(",
+    re.IGNORECASE,
+)
 
 
 def build_prompt(
